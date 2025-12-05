@@ -1,19 +1,25 @@
 # Use official OpenJDK 17 image
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk
 
+# Set working directory
 WORKDIR /app
 
-COPY mvnw pom.xml ./
+# Copy Maven wrapper and pom.xml first (for caching dependencies)
+COPY mvnw .
 COPY .mvn .mvn
-COPY src ./src
+COPY pom.xml .
 
+# Copy source code
+COPY src src
+
+# Give execution permission to Maven wrapper
+RUN chmod +x mvnw
+
+# Build the application without tests
 RUN ./mvnw clean package -DskipTests
 
-ENV PORT 8080
-EXPOSE $PORT
+# Expose default Spring Boot port
+EXPOSE 8080
 
-ENV DB_URL=${DB_URL}
-ENV DB_USERNAME=${DB_USERNAME}
-ENV DB_PASSWORD=${DB_PASSWORD}
-
-CMD java -jar target/*.jar --server.port=$PORT
+# Start the application
+CMD ["java", "-jar", "target/hostel-management-backend-0.0.1-SNAPSHOT.jar"]
